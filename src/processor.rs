@@ -11,3 +11,18 @@ pub trait ParallelProcessor: Send + Clone {
         Ok(())
     }
 }
+
+/// Trait implemented for a type that processes pairs of records in parallel
+pub trait PairedParallelProcessor: Send + Clone {
+    /// Called on a pair of records
+    fn process_record_pair<'a, Rf: MinimalRefRecord<'a>>(
+        &mut self,
+        record1: Rf,
+        record2: Rf,
+    ) -> Result<()>;
+
+    /// Called when a batch of pairs is complete
+    fn on_batch_complete(&mut self) -> Result<()> {
+        Ok(())
+    }
+}
