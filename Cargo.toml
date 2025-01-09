@@ -2,6 +2,13 @@
 name = "seq_io_parallel"
 version = "0.1.0"
 edition = "2021"
+authors = ["Noam Teyssier"]
+description = "A map-reduce style parallel extension to seq_io"
+license = "MIT"
+repository = "https://github.com/noamteyssier/seq_io_parallel"
+documentation = "https://docs.rs/seq_io_parallel"
+categories = ["science"]
+keywords = ["bioinformatics", "fasta", "fastq", "parallel", "map-reduce"]
 
 [dependencies]
 anyhow = "1.0.95"
