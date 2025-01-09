@@ -30,6 +30,6 @@ impl MinimalRefRecord<'_> for seq_io::fasta::RefRecord<'_> {
     }
 
     fn ref_qual(&self) -> &[u8] {
-        unimplemented!("FASTA does not provide a quality score");
+        &[]
     }
 }
