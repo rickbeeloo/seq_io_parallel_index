@@ -1,0 +1,10 @@
+[package]
+name = "seq_io_parallel"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+anyhow = "1.0.95"
+crossbeam-channel = "0.5.14"
+seq_io = "0.3.2"
+thiserror = "2.0.10"
