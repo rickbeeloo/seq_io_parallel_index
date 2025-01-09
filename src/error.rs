@@ -1,4 +1,4 @@
-use seq_io::fastq;
+use seq_io::{fasta, fastq};
 use std::io;
 use thiserror::Error;
 
@@ -12,6 +12,9 @@ pub enum ParallelError<E> {
 
     #[error("Fastq error: {0}")]
     Fastq(fastq::Error),
+
+    #[error("Fasta error: {0}")]
+    Fasta(fasta::Error),
 }
 
 impl<E> From<io::Error> for ParallelError<E> {
@@ -25,6 +28,13 @@ impl<E> From<fastq::Error> for ParallelError<E> {
         ParallelError::Fastq(err)
     }
 }
+
+impl<E> From<fasta::Error> for ParallelError<E> {
+    fn from(err: fasta::Error) -> Self {
+        ParallelError::Fasta(err)
+    }
+}
+
 impl From<anyhow::Error> for ParallelError<anyhow::Error> {
     fn from(err: anyhow::Error) -> Self {
         ParallelError::Processing(err)
