@@ -1,5 +1,4 @@
-pub mod fasta;
-pub mod fastq;
+mod macro_impl;
 pub mod processor;
 pub mod reader;
 pub mod record;

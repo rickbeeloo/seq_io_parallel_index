@@ -6,11 +6,17 @@ use std::sync::{atomic::AtomicUsize, Arc};
 #[derive(Clone, Default)]
 pub struct ExpensiveCalculation {
     local_sum: usize,
+    local_num_records: usize,
     global_sum: Arc<AtomicUsize>,
+    global_num_records: Arc<AtomicUsize>,
 }
 impl ExpensiveCalculation {
     pub fn get_global_sum(&self) -> usize {
         self.global_sum.load(std::sync::atomic::Ordering::Relaxed)
+    }
+    pub fn get_global_num_records(&self) -> usize {
+        self.global_num_records
+            .load(std::sync::atomic::Ordering::Relaxed)
     }
 }
 impl ParallelProcessor for ExpensiveCalculation {
@@ -24,13 +30,20 @@ impl ParallelProcessor for ExpensiveCalculation {
             }
         }
 
+        self.local_num_records += 1;
+
         Ok(())
     }
 
     fn on_batch_complete(&mut self) -> Result<()> {
         self.global_sum
             .fetch_add(self.local_sum, std::sync::atomic::Ordering::Relaxed);
+
+        self.global_num_records
+            .fetch_add(self.local_num_records, std::sync::atomic::Ordering::Relaxed);
+
         self.local_sum = 0;
+        self.local_num_records = 0;
         Ok(())
     }
 }
@@ -52,6 +65,7 @@ pub fn main() -> Result<()> {
     reader.process_parallel(processor.clone(), num_threads)?;
 
     println!("Global sum: {}", processor.get_global_sum());
+    println!("Global num records: {}", processor.get_global_num_records());
 
     Ok(())
 }
