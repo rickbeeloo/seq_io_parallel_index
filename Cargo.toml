@@ -14,7 +14,6 @@ keywords = ["bioinformatics", "fasta", "fastq", "parallel", "map-reduce"]
 anyhow = "1.0.95"
 crossbeam-channel = "0.5.14"
 seq_io = "0.3.2"
-thiserror = "2.0.10"
 
 [dev-dependencies]
 niffler = "2.6.0"
