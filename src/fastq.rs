@@ -51,7 +51,6 @@ where
 
                             if current_idx >= record_sets_reader.len() {
                                 current_idx = 0;
-                                // break;
                             }
                         } else {
                             break;
