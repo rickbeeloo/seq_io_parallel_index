@@ -1,3 +1,4 @@
+use anyhow::Result;
 use crossbeam_channel;
 use std::io;
 use std::marker::Send;
@@ -9,21 +10,16 @@ use seq_io::{
     policy,
 };
 
-use crate::{ParallelError, ParallelProcessor, ParallelReader};
+use crate::{ParallelProcessor, ParallelReader};
 
 impl<R, P> ParallelReader<R, P> for Reader<R, P>
 where
     R: io::Read + Send,
     P: policy::BufPolicy + Send,
 {
-    fn process_parallel<T, E>(
-        mut self,
-        processor: T,
-        num_threads: usize,
-    ) -> Result<(), ParallelError<E>>
+    fn process_parallel<T>(mut self, processor: T, num_threads: usize) -> Result<()>
     where
-        T: ParallelProcessor<E>,
-        E: Into<ParallelError<E>> + Send,
+        T: ParallelProcessor,
     {
         // Create shared vector of record sets
         let record_sets: Vec<_> = (0..num_threads * 2)
@@ -34,10 +30,10 @@ where
         // Create bounded MPMC channel
         let (tx, rx) = crossbeam_channel::bounded(num_threads * 2);
 
-        thread::scope(|scope| -> Result<(), ParallelError<E>> {
+        thread::scope(|scope| -> Result<()> {
             // Spawn reader thread
             let record_sets_reader = Arc::clone(&record_sets);
-            let reader_handle = scope.spawn(move || -> Result<(), ParallelError<E>> {
+            let reader_handle = scope.spawn(move || -> Result<()> {
                 let mut current_idx = 0;
 
                 loop {
@@ -81,7 +77,7 @@ where
                 let rx = rx.clone();
                 let mut processor = processor.clone();
 
-                let handle = scope.spawn(move || -> Result<(), ParallelError<E>> {
+                let handle = scope.spawn(move || -> Result<()> {
                     while let Ok(Some(idx)) = rx.recv() {
                         let record_set = record_sets[idx].lock().unwrap();
 

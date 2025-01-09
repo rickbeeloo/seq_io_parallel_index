@@ -1,5 +1,6 @@
-use crate::{processor::ParallelProcessor, ParallelError};
+use crate::processor::ParallelProcessor;
 
+use anyhow::Result;
 use seq_io::policy;
 use std::io;
 
@@ -8,12 +9,7 @@ where
     R: io::Read + Send,
     P: policy::BufPolicy + Send,
 {
-    fn process_parallel<T, E>(
-        self,
-        processor: T,
-        num_threads: usize,
-    ) -> Result<(), ParallelError<E>>
+    fn process_parallel<T>(self, processor: T, num_threads: usize) -> Result<()>
     where
-        T: ParallelProcessor<E>,
-        E: Into<ParallelError<E>> + Send;
+        T: ParallelProcessor;
 }
