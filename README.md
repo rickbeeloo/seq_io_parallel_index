@@ -121,3 +121,9 @@ FASTA/FASTQ processing is typically I/O-bound, so parallel processing benefits m
 - Thread-local state can be maintained without locks
 - Global state should use appropriate synchronization (e.g., `Arc<AtomicUsize>`)
 - Heavy initialization costs can be mitigated by wrapping in `Arc`
+
+## Future Work
+
+Currently this library is making use of `anyhow` for all error handling.
+This is not ideal for custom error types in libraries, but for many CLI tools will work just fine.
+In the future this may change.
