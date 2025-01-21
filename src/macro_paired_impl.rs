@@ -75,17 +75,20 @@ fn run_paired_worker_thread<T, P, F>(
     record_sets: PairedRecordSets<T>,
     rx: Receiver<Option<usize>>,
     mut processor: P,
+    thread_id: usize,
     process_fn: F,
 ) -> Result<()>
 where
     P: PairedParallelProcessor,
     F: Fn(&(T, T), &mut P) -> Result<()>,
 {
+    processor.set_thread_id(thread_id);
     while let Ok(Some(idx)) = rx.recv() {
         let record_set_pair = record_sets[idx].lock();
         process_fn(&record_set_pair, &mut processor)?;
         processor.on_batch_complete()?;
     }
+    processor.on_thread_complete()?;
     Ok(())
 }
 
@@ -129,7 +132,7 @@ macro_rules! impl_paired_parallel_reader {
 
                     // Spawn worker threads
                     let mut handles = Vec::new();
-                    for _ in 0..num_threads {
+                    for thread_id in 0..num_threads {
                         let worker_sets = Arc::clone(&record_sets);
                         let worker_rx = rx.clone();
                         let worker_processor = processor.clone();
@@ -139,6 +142,7 @@ macro_rules! impl_paired_parallel_reader {
                                 worker_sets,
                                 worker_rx,
                                 worker_processor,
+                                thread_id,
                                 |record_set_pair, processor| {
                                     let records1 = record_set_pair.0.into_iter();
                                     let records2 = record_set_pair.1.into_iter();

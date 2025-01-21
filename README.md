@@ -70,6 +70,15 @@ pub trait MinimalRefRecord<'a> {
 }
 ```
 
+### Hooking into the Parallel Processing
+
+This implementation allows for hooking into different stages of the processing pipeline:
+
+1. **Record Processing**: Implement the `process_record` method to process individual records.
+2. **Batch Completion**: Implement the `on_batch_complete` method to perform an operation after each batch (optional).
+3. **Thread Completion**: Implement the `on_thread_complete` method to perform an operation after all batches within a thread (optional).
+4. **Get and Set Thread ID**: Implement the `get_thread_id` and `set_thread_id` methods to access the thread ID (optional).
+
 ## Usage Examples
 
 ### Single-File Processing
