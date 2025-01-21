@@ -1,11 +1,8 @@
 use anyhow::Result;
 use crossbeam_channel::{bounded, Receiver, Sender};
+use parking_lot::Mutex;
 use seq_io::policy;
-use std::{
-    io,
-    sync::{Arc, Mutex},
-    thread,
-};
+use std::{io, sync::Arc, thread};
 
 use crate::{ParallelProcessor, ParallelReader};
 
@@ -42,7 +39,7 @@ where
     let mut current_idx = 0;
 
     loop {
-        let mut record_set = record_sets[current_idx].lock().unwrap();
+        let mut record_set = record_sets[current_idx].lock();
 
         if let Some(result) = read_fn(&mut reader, &mut record_set) {
             result?;
@@ -75,7 +72,7 @@ where
     F: Fn(&T, &mut P) -> Result<()>,
 {
     while let Ok(Some(idx)) = rx.recv() {
-        let record_set = record_sets[idx].lock().unwrap();
+        let record_set = record_sets[idx].lock();
         process_fn(&record_set, &mut processor)?;
         processor.on_batch_complete()?;
     }
