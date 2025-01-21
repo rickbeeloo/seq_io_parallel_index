@@ -1,6 +1,6 @@
 [package]
 name = "seq_io_parallel"
-version = "0.1.3"
+version = "0.1.4"
 edition = "2021"
 authors = ["Noam Teyssier"]
 description = "A map-reduce style parallel extension to seq_io"
