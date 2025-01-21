@@ -7,3 +7,5 @@ pub mod record;
 pub use processor::{PairedParallelProcessor, ParallelProcessor};
 pub use reader::{PairedParallelReader, ParallelReader};
 pub use record::MinimalRefRecord;
+
+pub use seq_io::{fasta, fastq, policy};
