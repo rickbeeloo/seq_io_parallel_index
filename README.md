@@ -2,15 +2,18 @@
 
 A parallel processing extension for the [`seq_io`](https://github.com/markschl/seq_io) crate, providing an ergonomic API for parallel FASTA/FASTQ file processing.
 
+For an alternative implementation with native paired-end support see [`paraseq`](https://github.com/noamteyssier/paraseq).
+
 ## Overview
 
 While `seq_io` includes parallel implementations for both FASTQ and FASTA readers, this library offers an alternative approach with a potentially more ergonomic API that is not reliant on closures.
 The implementation follows a Map-Reduce style of parallelism that emphasizes clarity and ease of use.
 
+This cannot support paired-end processing currently.
+
 ## Key Features
 
 - Single-producer multi-consumer parallel processing pipeline
-- Support for both single-file and paired-end read processing
 - Map-Reduce style processing architecture
 - Support for both FASTA and FASTQ formats
 - Thread-safe stateful processing
@@ -35,21 +38,6 @@ To use parallel processing, implement one of the following traits:
 pub trait ParallelProcessor: Send + Clone {
     // Map: Process individual records
     fn process_record<'a, Rf: MinimalRefRecord<'a>>(&mut self, record: Rf) -> Result<()>;
-
-    // Reduce: Process completed batches (optional)
-    fn on_batch_complete(&mut self) -> Result<()> {
-        Ok(())
-    }
-}
-
-// For paired-end read processing
-pub trait PairedParallelProcessor: Send + Clone {
-    // Map: Process pairs of records
-    fn process_record_pair<'a, Rf: MinimalRefRecord<'a>>(
-        &mut self,
-        record1: Rf,
-        record2: Rf,
-    ) -> Result<()>;
 
     // Reduce: Process completed batches (optional)
     fn on_batch_complete(&mut self) -> Result<()> {
@@ -135,45 +123,6 @@ fn main() -> Result<()> {
 }
 ```
 
-### Paired-End Read Processing
-
-For processing paired-end reads (e.g., R1 and R2 FASTQ files):
-
-```rust
-use seq_io_parallel::{MinimalRefRecord, PairedParallelProcessor, PairedParallelReader};
-
-impl PairedParallelProcessor for ExpensiveCalculation {
-    fn process_record_pair<'a, Rf: MinimalRefRecord<'a>>(&mut self, r1: Rf, r2: Rf) -> Result<()> {
-        // Validate that paired records belong together (optional, not efficient but useful for sanity checks).
-        if r1.ref_head() != r2.ref_head() {
-            bail!("Headers do not match");
-        }
-
-        // Process both reads
-        for _ in 0..50 {
-            for (s, q) in r1.ref_seq().iter().zip(r1.ref_qual().iter()) {
-                self.local_sum += (*s - 33) as usize + (*q - 33) as usize;
-            }
-            for (s, q) in r2.ref_seq().iter().zip(r2.ref_qual().iter()) {
-                self.local_sum += (*s - 33) as usize + (*q - 33) as usize;
-            }
-        }
-        Ok(())
-    }
-}
-
-fn main() -> Result<()> {
-    let (handle_r1, _) = niffler::send::from_path(path_r1)?;
-    let (handle_r2, _) = niffler::send::from_path(path_r2)?;
-    let reader_r1 = fastq::Reader::new(handle_r1);
-    let reader_r2 = fastq::Reader::new(handle_r2);
-    let processor = ExpensiveCalculation::default();
-
-    reader_r1.process_parallel_paired(reader_r2, processor.clone(), num_threads)?;
-    Ok(())
-}
-```
-
 ## Performance Considerations
 
 FASTA/FASTQ processing is typically I/O-bound, so parallel processing benefits may vary:
@@ -181,7 +130,6 @@ FASTA/FASTQ processing is typically I/O-bound, so parallel processing benefits m
 - Best for computationally expensive operations (e.g., alignment, k-mer counting)
 - Performance gains depend on the ratio of I/O to processing time
 - Consider using `Arc` for processor state with heavy initialization costs
-- Paired-end processing maintains synchronization between R1 and R2 files.
 
 ## Implementation Notes
 
