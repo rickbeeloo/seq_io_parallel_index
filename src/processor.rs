@@ -4,7 +4,7 @@ use anyhow::Result;
 /// Trait implemented for a type that processes records in parallel
 pub trait ParallelProcessor: Send + Clone {
     /// Called on an individual record with its global index
-    fn process_record<'a, Rf: MinimalRefRecord<'a>>(&mut self, record: Rf, index: usize) -> Result<()>;
+    fn process_record<'a, Rf: MinimalRefRecord<'a>>(&mut self, record: Rf, record_set_idx: usize, record_idx: usize) -> Result<()>;
 
     /// Called when a batch of records is complete
     fn on_batch_complete(&mut self) -> Result<()> {

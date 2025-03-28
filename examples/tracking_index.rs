@@ -32,7 +32,7 @@ impl ExpensiveOrderedReads {
 
 impl ParallelProcessor for ExpensiveOrderedReads {
     
-    fn process_record<'a, Rf: MinimalRefRecord<'a>>(&mut self, record: Rf, global_idx: usize) -> Result<()> {
+    fn process_record<'a, Rf: MinimalRefRecord<'a>>(&mut self, record: Rf, record_set_idx: usize, record_idx: usize) -> Result<()> {
         let seq = record.ref_seq();
         let qual = record.ref_qual();
 
@@ -45,7 +45,7 @@ impl ParallelProcessor for ExpensiveOrderedReads {
 
         // This should be done in a separate threads of course, but for not mutex locked
         let mut writer = self.buf_writer.lock().unwrap();
-        writeln!(writer, "{} {}", String::from_utf8_lossy(record.ref_head()), global_idx)?;
+        writeln!(writer, "{} {} {}", String::from_utf8_lossy(record.ref_head()), record_set_idx, record_idx)?;
         drop(writer);
 
         Ok(())

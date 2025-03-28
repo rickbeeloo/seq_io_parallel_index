@@ -20,7 +20,7 @@ impl ExpensiveCalculation {
     }
 }
 impl ParallelProcessor for ExpensiveCalculation {
-    fn process_record<'a, Rf: MinimalRefRecord<'a>>(&mut self, record: Rf, global_idx: usize) -> Result<()> {
+    fn process_record<'a, Rf: MinimalRefRecord<'a>>(&mut self, record: Rf, record_set_idx: usize, record_idx: usize) -> Result<()> {
         let seq = record.ref_seq();
         let qual = record.ref_qual();
 

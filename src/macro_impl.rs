@@ -130,7 +130,7 @@ macro_rules! impl_parallel_reader {
                                 thread_id,
                                 |record_set, processor, global_idx| {
                                     for (record_idx, record) in record_set.into_iter().enumerate() {
-                                        let _record = processor.process_record(record, global_idx + record_idx)?;
+                                        let _record = processor.process_record(record, global_idx, record_idx)?;
                                     }
                                     Ok(())
                                 },
