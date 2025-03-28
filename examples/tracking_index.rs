@@ -1,11 +1,12 @@
 use anyhow::{bail, Result};
 use seq_io::fastq;
 use seq_io_parallel::{MinimalRefRecord, ParallelProcessor, ParallelReader};
-use std::sync::{atomic::AtomicUsize, Arc, Mutex};
+use std::sync::{Arc, Mutex};
 use std::io::BufWriter;
 use std::fs::File;
-use std::env::temp_dir;
 use std::io::Write;
+
+
 #[derive(Clone)]
 pub struct ExpensiveOrderedReads {
     buf_writer: Arc<Mutex<BufWriter<File>>>,
@@ -14,8 +15,8 @@ pub struct ExpensiveOrderedReads {
 
 impl Default for ExpensiveOrderedReads {
     fn default() -> Self {
-        let path = temp_dir().join("default.fastq");
-        Self::new(&path.to_string_lossy()).unwrap()
+        let path = "test.txt";
+        Self::new(path).unwrap()
     }
 }
 
@@ -45,7 +46,7 @@ impl ParallelProcessor for ExpensiveOrderedReads {
 
         // This should be done in a separate threads of course, but for not mutex locked
         let mut writer = self.buf_writer.lock().unwrap();
-        writeln!(writer, "{} {} {}", String::from_utf8_lossy(record.ref_head()), record_set_idx, record_idx)?;
+        writeln!(writer, "{} {} {}", record.ref_id().unwrap(), record_set_idx, record_idx)?;
         drop(writer);
 
         Ok(())
