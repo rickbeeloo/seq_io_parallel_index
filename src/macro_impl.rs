@@ -7,7 +7,7 @@ use std::{io, sync::Arc, thread};
 use crate::{ParallelProcessor, ParallelReader};
 
 type RecordSets<T> = Arc<Vec<Mutex<T>>>;
-type ProcessorChannels = (Sender<Option<usize>>, Receiver<Option<usize>>);
+type ProcessorChannels = (Sender<Option<(usize, usize)>>, Receiver<Option<(usize, usize)>>);
 
 /// Creates a collection of record sets
 ///
@@ -29,7 +29,7 @@ fn create_channels(buffer_size: usize) -> ProcessorChannels {
 fn run_reader_thread<R, T, F>(
     mut reader: R,
     record_sets: RecordSets<T>,
-    tx: Sender<Option<usize>>,
+    tx: Sender<Option<(usize, usize)>>,
     num_threads: usize,
     read_fn: F,
 ) -> Result<()>
@@ -37,7 +37,8 @@ where
     F: Fn(&mut R, &mut T) -> Option<Result<()>>,
 {
     let mut current_idx = 0;
-
+    let mut global_idx = 0;
+    
     loop {
         let mut record_set = record_sets[current_idx].lock();
 
@@ -45,8 +46,9 @@ where
             result?;
 
             drop(record_set);
-            tx.send(Some(current_idx)).unwrap();
+            tx.send(Some((current_idx, global_idx))).unwrap();
             current_idx = (current_idx + 1) % record_sets.len();
+            global_idx += 1;
         } else {
             break;
         }
@@ -63,19 +65,19 @@ where
 /// Internal processing of worker threads
 fn run_worker_thread<T, P, F>(
     record_sets: RecordSets<T>,
-    rx: Receiver<Option<usize>>,
+    rx: Receiver<Option<(usize, usize)>>,
     mut processor: P,
     thread_id: usize,
     process_fn: F,
 ) -> Result<()>
 where
     P: ParallelProcessor,
-    F: Fn(&T, &mut P) -> Result<()>,
+    F: Fn(&T, &mut P, usize) -> Result<()>,
 {
     processor.set_thread_id(thread_id);
-    while let Ok(Some(idx)) = rx.recv() {
+    while let Ok(Some((idx, global_idx))) = rx.recv() {
         let record_set = record_sets[idx].lock();
-        process_fn(&record_set, &mut processor)?;
+        process_fn(&record_set, &mut processor, global_idx)?;
         processor.on_batch_complete()?;
     }
     processor.on_thread_complete()?;
@@ -126,9 +128,9 @@ macro_rules! impl_parallel_reader {
                                 worker_rx,
                                 worker_processor,
                                 thread_id,
-                                |record_set, processor| {
+                                |record_set, processor, global_idx| {
                                     for record in record_set.into_iter() {
-                                        processor.process_record(record)?;
+                                        let _record = processor.process_record(record, global_idx)?;
                                     }
                                     Ok(())
                                 },

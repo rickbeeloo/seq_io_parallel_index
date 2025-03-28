@@ -3,8 +3,8 @@ use anyhow::Result;
 
 /// Trait implemented for a type that processes records in parallel
 pub trait ParallelProcessor: Send + Clone {
-    /// Called on an individual record
-    fn process_record<'a, Rf: MinimalRefRecord<'a>>(&mut self, record: Rf) -> Result<()>;
+    /// Called on an individual record with its global index
+    fn process_record<'a, Rf: MinimalRefRecord<'a>>(&mut self, record: Rf, index: usize) -> Result<()>;
 
     /// Called when a batch of records is complete
     fn on_batch_complete(&mut self) -> Result<()> {
@@ -30,12 +30,14 @@ pub trait ParallelProcessor: Send + Clone {
 
 /// Trait implemented for a type that processes pairs of records in parallel
 pub trait PairedParallelProcessor: Send + Clone {
-    /// Called on a pair of records
+    /// Called on a pair of records with their indices
     fn process_record_pair<'a, Rf: MinimalRefRecord<'a>>(
         &mut self,
         record1: Rf,
         record2: Rf,
-    ) -> Result<()>;
+        index1: usize,
+        index2: usize,
+    ) -> Result<(Rf, Rf)>;
 
     /// Called when a batch of pairs is complete
     fn on_batch_complete(&mut self) -> Result<()> {
