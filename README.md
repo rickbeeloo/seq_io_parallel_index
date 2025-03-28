@@ -1,5 +1,17 @@
 # seq_io_parallel
 
+# Original Index Tracking for seq_io_parallel
+
+This fork adds two key features to [seq_io_parallel](https://github.com/noamteyssier/seq_io_parallel):
+
+1. **Record Position Tracking**: Provides access to both:
+   - Record set index 
+   - Record index within the set
+   This allows reconstructing the original position of each record by sorting first by record set index, then by record index.
+
+2. **Seq_io ID Access**: Exposes `Record.ref_id()` method from seq_io, so no need to manually parse record names.
+
+
 A parallel processing extension for the [`seq_io`](https://github.com/markschl/seq_io) crate, providing an ergonomic API for parallel FASTA/FASTQ file processing.
 
 For an alternative implementation with native paired-end support see [`paraseq`](https://github.com/noamteyssier/paraseq).
