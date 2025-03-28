@@ -1,6 +1,6 @@
 # seq_io_parallel
 
-# Original Index Tracking for seq_io_parallel
+### Original Index Tracking for seq_io_parallel
 
 This fork adds two key features to [seq_io_parallel](https://github.com/noamteyssier/seq_io_parallel):
 
